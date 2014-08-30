@@ -1,0 +1,53 @@
+package com.zxhd.log.service;
+
+import com.zxhd.log.client.LogClientUtil;
+import java.util.concurrent.atomic.AtomicLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+#foreach($imp in $obj.impPath)
+	import $imp;
+#end
+
+public class LogService {
+	private static final Logger log = LoggerFactory.getLogger("tlog");
+	private ThreadLocal<Long> tl = new ThreadLocal<Long>();
+	private LogService(){
+		tlogId = new AtomicLong(System.currentTimeMillis());
+	}
+	private static LogService instance;
+	private AtomicLong tlogId;
+	public static LogService getInstance(){
+		if(instance == null){
+			instance = new LogService();
+		}
+		return instance;
+	}
+	
+	private long getTlogId(){
+		if(tl.get() == null){
+			tl.set(tlogId.getAndIncrement());
+		}
+		return tl.get();
+	}
+	private long getIEventId(int serverId){
+		return Long.parseLong(String.valueOf(serverId) + getTlogId());
+	}
+	
+	#foreach($msg in $obj.moList)
+/**
+   *	---$msg.classComment
+  #foreach($field in $msg.fieldList)
+ *	@param ${field.name} ${field.comment}
+  #end
+ **/
+public void send${msg.className}(${msg.fields}){
+		$msg.className logmsg = new ${msg.className}(${msg.instanceStr});
+		logmsg.setIEventId(getIEventId(logmsg.getServerId()));
+		try{
+			LogClientUtil.getInstance().addLogInfo(logmsg);
+		} catch(Exception e){
+			log.error(logmsg.getUpdateSql());
+		}
+	}
+	#end
+}

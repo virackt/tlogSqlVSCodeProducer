@@ -1,0 +1,3 @@
+#foreach ($msg in $obj.moList)
+	create table $msg.tableName ($msg.createSql)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+#end

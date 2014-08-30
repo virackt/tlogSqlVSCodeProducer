@@ -1,0 +1,3 @@
+#foreach($mo in $obj.moList)
+plugin=${mo.pkgName}.${mo.className}
+#end

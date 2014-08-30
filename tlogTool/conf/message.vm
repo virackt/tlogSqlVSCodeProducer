@@ -1,0 +1,147 @@
+package $msg.pkgName;
+import com.zxhd.log.core.ILogCodec;
+import com.zxhd.log.file.LogNameUtil;
+import com.zxhd.log.util.LogFileUtil;
+import com.zxhd.log.util.IoBufferUtil;
+import org.apache.mina.common.ByteBuffer;
+import java.util.List;
+import java.util.ArrayList;
+/**
+  * $msg.classComment
+  *	@author VIC
+  * 此类用工具生成，不可修改
+  */
+public class $msg.className implements $msg.fatherName{
+	
+	public ${msg.className}(){}
+	
+	public ${msg.className}($msg.fields){
+		#foreach($field in $msg.fieldList)
+			this.$field.name = $field.name;
+		#end
+	}
+	// 事件id
+	private long iEventId;
+	#foreach($field in $msg.fieldList)
+		// $field.comment
+		private ${field.javaType} ${field.name};
+	#end
+	public void setIEventId(long iEventId){
+		this.iEventId = iEventId;
+	}
+	public long getIEventId(){
+		return this.iEventId;
+	}
+	#foreach($field in $msg.fieldList)
+		$field.setMethod
+			this.$field.name = $field.name;
+		}
+		$field.getMethod
+			return this.$field.name;
+		}
+	#end
+	//@Override
+	public void encode(ByteBuffer buffer){
+		buffer.putLong(iEventId);
+		#foreach($field in $msg.fieldList)
+			#if ($field.javaType == "Integer" || $field.javaType == "int")
+			   buffer.putInt($field.name);
+			 #elseif($field.javaType == "String")
+			   IoBufferUtil.putString(buffer, $field.name);
+			 #elseif($field.javaType == "long")
+			 	 buffer.putLong($field.name);
+			 #elseif($field.javaType == "short")
+			 	 buffer.putShort($field.name);
+			 #elseif($field.javaType == "List")
+				if($field.name == null){
+			 		buffer.putInt(0);
+			 	} else {
+			 		int len = ${field.name}.size();
+			 		buffer.putInt(len);
+			 		if(len != 0){
+			 			for(Object obj : $field.name){
+				 			if(obj instanceof String){
+				 				String str = (String)obj;
+				 				IoBufferUtil.putString(buffer, str);
+				 			} else if (obj instanceof Integer){
+				 				buffer.putInt((Integer)obj);
+				 			} else if (obj instanceof Message){
+				 				Message msg = (Message)obj;
+				 				msg.encode(buffer);
+				 			}
+			 			}
+			 		}
+			 	}
+			  #elseif($field.javaType == "boolean" || $field.javaType == "Boolean")
+			 	if(this.$field.name == true){
+			 		buffer.putInt(1);
+			 	} else {
+			 		buffer.putInt(0);
+			 	}
+			 #end
+		#end
+	}
+	//@Override
+	public void decode(ByteBuffer buffer){
+		if(buffer.hasRemaining()){
+			this.iEventId = buffer.getLong();
+		}
+		#foreach($field in $msg.fieldList)
+			#if ($field.javaType == "Integer" || $field.javaType == "int")
+				if(buffer.hasRemaining()){
+				   this.$field.name = buffer.getInt();
+				}
+			 #elseif($field.javaType == "String")
+				if(buffer.hasRemaining()){
+				   this.$field.name = IoBufferUtil.getString(buffer);
+				}
+			 #elseif($field.javaType == "Long" || $field.javaType == "long")
+			 	if(buffer.hasRemaining()){
+			 		this.$field.name = buffer.getLong();
+			 	}
+				 	if(buffer.getInt()==1){
+				 		this.$field.name = true;
+				 	} else {
+				 		this.$field.name = false;
+				 	}
+				}
+			 #end
+		#end
+	}
+	
+	//@Override
+	public int getType() {
+		
+		return $msg.type;
+	}
+
+	//@Override
+	public String getFileName() {
+		return LogNameUtil.getLogName(this.getClass().getSimpleName());
+	}
+
+	//@Override
+	public String getUpdateSql() {
+		return "insert into $msg.tableName values(" + iEventId + "," + $msg.updateSql + ")";
+	}
+
+	//@Override
+	public String getCreateTableSql() {
+		return "create table $msg.tableName ($msg.createSql)ENGINE=MyISAM DEFAULT CHARSET=utf8;" ;
+	}
+
+	//@Override
+	public String getFileContent() {
+		return LogFileUtil.convertObjects2String($msg.instanceStr);
+	}
+	
+	public List<Object> list(){
+		List<Object> list = new ArrayList<Object>();
+		list.add(iEventId);
+		#foreach($field in $msg.fieldList)
+			list.add($field.name);
+		#end
+		return list;
+	}
+	
+}
